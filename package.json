@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/TheDeVerO/TSAA/issues"
   },
-  "homepage": "https://github.com/TheDeVerO/TSAA#readme"
+  "homepage": "https://github.com/TheDeVerO/TSAA#readme",
+  "dependencies": {
+    "tmi.js": "^1.8.5"
+  }
 }

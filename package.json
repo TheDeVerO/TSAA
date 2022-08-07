@@ -1,0 +1,19 @@
+{
+  "name": "tsaa",
+  "version": "1.0.0",
+  "description": "Currently planned functional: \t- Play commands by typing a command in chat \t- Upload sounds by dropping them in the resources folder (will support folders) \t... (I'll update the list as per additional functional request or funny idea).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheDeVerO/TSAA.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TheDeVerO/TSAA/issues"
+  },
+  "homepage": "https://github.com/TheDeVerO/TSAA#readme"
+}

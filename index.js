@@ -1,4 +1,13 @@
+const tmi = require('tmi.js');
 const getFiles = require('./get-files');
+const serverHandler = require('./server-handler');
+
+const socket = serverHandler.createServer();
+
+const tmiClient = new tmi.Client({
+	connection: { secure: true, reconnect: true },
+	channels: ['angysaoirse'],
+});
 
 const files = getFiles();
 const commands = {};
@@ -23,5 +32,14 @@ files.forEach((file) => {
 	}
 });
 
+tmiClient.on('message', (channel, tags, message, self) => {
+	if (self) return;
+
+    commands.keys(commands).forEach((command) => {
+        
+    })
+    
+});
+
 console.log(commands);
-commands.test.callback();
+commands.Test.callback();

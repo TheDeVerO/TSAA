@@ -27,7 +27,6 @@ files.forEach((file) => {
 		commandName = file.split('.').slice(0, -1).join('.');
 		commands[commandName] = {
 			callback: function callback() {
-				console.log(file);
 				playSound(`${file}`);
 			},
 		};
@@ -66,7 +65,7 @@ function createServer() {
 				}
 			})
 			.listen(PORT, () => {
-				console.log(`Server running on ${PORT}...`);
+				console.log(`Server running on localhost:${PORT}/...`);
 			});
 
 		wsServer = new WebSocketServer({
@@ -78,13 +77,15 @@ function createServer() {
 		});
 
 		wsServer.on('request', (request) => {
-			console.log(`Web Socket Server received a request. (Currently I'm accepting it without checks.)`);
+			console.log(`Web Socket Server received a request.`);
+
 			var connection = request.accept();
 
 			connection.on('message', (data) => {
-				console.log('Got a message.');
-				console.log(data);
-				console.warn('Current API does not expect nor supports socket requests.');
+				console.log('Connection received a message. Relaying...');
+				wsServer.connections.forEach((connection) => {
+					connection.send(data.utf8Data);
+				});
 			});
 			connection.on('close', () => {
 				console.warn(`Connection closed.`);
@@ -114,8 +115,10 @@ function playSound(path) {
 	if (wsServer.connections.length < 0) {
 		console.warn('WARNING! No connections. Your streaming software is most likely not capturing sound.');
 		console.warn(`Are you sure you've added http://localhost:${PORT}/ as browser source?`);
+		console.warn(`If browser source is added corretly - try selecting the source and pressing "Refresh" button.`);
 		console.warn(`If the issue persists, DM me about it.`);
 		return;
 	}
-	wsServer.connections[0]?.send(path);
+	console.log('Sending playSound signal... Connections: ' + wsServer.connections.length);
+	wsServer.connections?.forEach((connection) => connection.send(path));
 }

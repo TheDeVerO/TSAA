@@ -14,15 +14,21 @@ files.forEach((file) => {
 	if (typeof file === 'object' && file !== null) {
 		commands[file.command] = {
 			callback: function callback() {
-				const rand = Math.floor(Math.random() * file.files.length);
-				console.log(rand);
+				const rand = Math.random() * file.files.length - 1;
+				if (rand < 0) {
+					console.warn(`It is recommended to have at least two files in the ${file.command} directory`);
+					playSound(`${file.command}/${file.files[0]}`);
+				} else {
+					playSound(`${file.command}/${file.files[Math.round(rand)]}`);
+				}
 			},
 		};
 	} else {
-		const split = file.replace(/\\/g, '/').split('/');
-		commands[split[split.length - 1]] = {
+		commandName = file.split('.').slice(0, -1).join('.');
+		commands[commandName] = {
 			callback: function callback() {
 				console.log(file);
+				playSound(`${file}`);
 			},
 		};
 	}
@@ -33,6 +39,9 @@ const tmiClient = new tmi.Client({
 	channels: ['angysaoirse', 'the_devero'],
 });
 
+tmiClient.connect();
+createServer();
+
 function createServer() {
 	const PORT = 8082;
 
@@ -42,9 +51,7 @@ function createServer() {
 			.createServer(function (req, res) {
 				if (req.url === '/') {
 					console.log(`Homepage requested.`);
-					res.writeHead(200, { 'Content-Type': 'text/html' });
-					res.write(html);
-					res.end();
+					res.writeHead(200, { 'Content-Type': 'text/html' }).write(html);
 				} else if (req.url.startsWith('/resources')) {
 					console.log(`Resources requested.`);
 					console.log(`Looking for ${req.url}...`);
@@ -53,7 +60,6 @@ function createServer() {
 						const readStream = fs.createReadStream(__dirname + req.url);
 						res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
 						readStream.pipe(res);
-						res.end();
 					}
 				}
 			})
@@ -85,8 +91,6 @@ function createServer() {
 	});
 }
 
-tmiClient.connect();
-
 tmiClient.on('message', (channel, tags, message, self) => {
 	if (self) return;
 	if (!message.startsWith('!')) return;
@@ -103,4 +107,13 @@ tmiClient.on('message', (channel, tags, message, self) => {
 		console.log('No such command found.');
 	}
 });
-createServer();
+
+function playSound(path) {
+	if (wsServer.connections.length < 0) {
+		console.warn('WARNING! No connections. Your streaming software is most likely not capturing sound.');
+		console.warn(`Are you sure you've added http://localhost:8082/ as browser source?`);
+		console.warn(`If the issue persists, DM me about it.`);
+		return;
+	}
+	wsServer.connections[0]?.send(path);
+}

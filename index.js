@@ -2,14 +2,19 @@ const tmi = require('tmi.js');
 const fs = require('fs');
 const http = require('http');
 const WebSocketServer = require('websocket').server;
+const SysTray = require('systray').default;
+const explorer = require('child_process').exec;
 
 const getFiles = require('./get-files');
+const systrayConfig = require('./systray.json');
 
 const files = getFiles();
+const systray = new SysTray(systrayConfig);
+
 const commands = {};
 
+var consoleToggle = true;
 var wsServer;
-
 
 files.forEach((file) => {
 	if (typeof file === 'object' && file !== null) {
@@ -123,3 +128,48 @@ function playSound(path) {
 	console.log('Sending playSound signal... Connections: ' + wsServer.connections.length);
 	wsServer.connections?.forEach((connection) => connection.send(path));
 }
+
+// SysTray Handler
+var CW;
+try {
+	CW = require('node-hide-console-window');
+	CW.hideConsole();
+} catch (error) {
+	console.log(`Couldn't get the node-hide-console-window module`);
+}
+
+systray.onClick((action) => {
+	if (action.seq_id === 0) {
+		try {
+			if (consoleToggle) {
+				CW.showConsole();
+				systray.sendAction({
+					type: 'update-item',
+					item: {
+						...action.item,
+						title: 'Hide Console',
+						seq_id: action.seq_id,
+					},
+				});
+				consoleToggle = !consoleToggle;
+			} else {
+				CW.hideConsole();
+				systray.sendAction({
+					type: 'update-item',
+					item: {
+						...action.item,
+						title: 'Show Console',
+						seq_id: action.seq_id,
+					},
+				});
+				consoleToggle = !consoleToggle;
+			}
+		} catch (e) {
+			console.log(`Can't toggle console.`);
+		}
+	} else if (action.seq_id === 1) {
+		explorer(`start "" "${__dirname}/resources"`);
+	} else if (action.seq_id === 2) {
+		process.exit(0);
+	}
+});

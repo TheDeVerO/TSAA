@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+	</head>
+	<body>
+		<script type="text/javascript">
+			let client = new WebSocket('ws://localhost:8082');
+
+			console.log(client);
+
+			client.addEventListener('open', (event) => client.send('Ello'));
+
+			client.addEventListener('message', (msg) => {
+				console.log(msg);
+			});
+		</script>
+	</body>
+</html>

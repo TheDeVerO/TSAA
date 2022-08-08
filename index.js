@@ -1,25 +1,21 @@
 const tmi = require('tmi.js');
+const fs = require('fs');
+const http = require('http');
+const WebSocketServer = require('websocket').server;
+
 const getFiles = require('./get-files');
-const serverHandler = require('./server-handler');
-
-const socket = serverHandler.createServer();
-
-const tmiClient = new tmi.Client({
-	connection: { secure: true, reconnect: true },
-	channels: ['angysaoirse'],
-});
 
 const files = getFiles();
 const commands = {};
 
+var wsServer;
+
 files.forEach((file) => {
 	if (typeof file === 'object' && file !== null) {
-		// console.log('called');
 		commands[file.command] = {
 			callback: function callback() {
 				const rand = Math.floor(Math.random() * file.files.length);
 				console.log(rand);
-				// playAudio(file.files[rand]);
 			},
 		};
 	} else {
@@ -32,14 +28,79 @@ files.forEach((file) => {
 	}
 });
 
-tmiClient.on('message', (channel, tags, message, self) => {
-	if (self) return;
-
-    commands.keys(commands).forEach((command) => {
-        
-    })
-    
+const tmiClient = new tmi.Client({
+	connection: { secure: true, reconnect: true },
+	channels: ['angysaoirse', 'the_devero'],
 });
 
-console.log(commands);
-commands.Test.callback();
+function createServer() {
+	const PORT = 8082;
+
+	fs.readFile('./index.html', function (err, html) {
+		if (err) console.log(err);
+		const httpServer = http
+			.createServer(function (req, res) {
+				if (req.url === '/') {
+					console.log(`Homepage requested.`);
+					res.writeHead(200, { 'Content-Type': 'text/html' });
+					res.write(html);
+					res.end();
+				} else if (req.url.startsWith('/resources')) {
+					console.log(`Resources requested.`);
+					console.log(`Looking for ${req.url}...`);
+					if (fs.existsSync(__dirname + req.url)) {
+						console.log(`Found. Uploading...`);
+						const readStream = fs.createReadStream(__dirname + req.url);
+						res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
+						readStream.pipe(res);
+						res.end();
+					}
+				}
+			})
+			.listen(PORT, () => {
+				console.log(`Server running on ${PORT}...`);
+			});
+
+		wsServer = new WebSocketServer({
+			httpServer: httpServer,
+		});
+
+		wsServer.on('connect', () => {
+			console.log('Web Socket Server is connected.');
+		});
+
+		wsServer.on('request', (request) => {
+			console.log(`Web Socket Server received a request. (Currently I'm accepting it without checks.)`);
+			var connection = request.accept();
+
+			connection.on('message', (data) => {
+				console.log('Got a message.');
+				console.log(data);
+				console.warn('Current API does not expect nor supports socket requests.');
+			});
+			connection.on('close', () => {
+				console.warn(`Connection closed.`);
+			});
+		});
+	});
+}
+
+tmiClient.connect();
+
+tmiClient.on('message', (channel, tags, message, self) => {
+	if (self) return;
+	if (!message.startsWith('!')) return;
+
+	console.log('tmiClient received a command message.');
+
+	const sound = message.substring(1);
+	console.log(`Received command: [${sound}].`);
+
+	try {
+		commands[sound].callback();
+	} catch (error) {
+		console.error(error.message);
+		console.log('No such command found.');
+	}
+});
+createServer();

@@ -51,7 +51,9 @@ function createServer() {
 			.createServer(function (req, res) {
 				if (req.url === '/') {
 					console.log(`Homepage requested.`);
-					res.writeHead(200, { 'Content-Type': 'text/html' }).write(html);
+					res.writeHead(200, { 'Content-Type': 'text/html' });
+					res.write(html);
+					res.end();
 				} else if (req.url.startsWith('/resources')) {
 					console.log(`Resources requested.`);
 					console.log(`Looking for ${req.url}...`);
@@ -111,7 +113,7 @@ tmiClient.on('message', (channel, tags, message, self) => {
 function playSound(path) {
 	if (wsServer.connections.length < 0) {
 		console.warn('WARNING! No connections. Your streaming software is most likely not capturing sound.');
-		console.warn(`Are you sure you've added http://localhost:8082/ as browser source?`);
+		console.warn(`Are you sure you've added http://localhost:${PORT}/ as browser source?`);
 		console.warn(`If the issue persists, DM me about it.`);
 		return;
 	}

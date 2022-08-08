@@ -1,6 +1,6 @@
 Prerequisites:
-Node.js
-NPM
+Node.js (https://nodejs.org/)
+NPM (Now comes with Node)
 
 Setup:
 Download the latest version.

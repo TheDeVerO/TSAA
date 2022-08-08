@@ -10,6 +10,7 @@ const commands = {};
 
 var wsServer;
 
+
 files.forEach((file) => {
 	if (typeof file === 'object' && file !== null) {
 		commands[file.command] = {
@@ -35,7 +36,7 @@ files.forEach((file) => {
 
 const tmiClient = new tmi.Client({
 	connection: { secure: true, reconnect: true },
-	channels: ['angysaoirse', 'the_devero'],
+	channels: ['angysaoirse'],
 });
 
 tmiClient.connect();

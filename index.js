@@ -60,11 +60,12 @@ function createServer() {
 					res.write(html);
 					res.end();
 				} else if (req.url.startsWith('/resources')) {
+					const path = decodeURIComponent(req.url);
 					console.log(`Resources requested.`);
-					console.log(`Looking for ${req.url}...`);
-					if (fs.existsSync(__dirname + req.url)) {
+					console.log(`Looking for ${path}...`);
+					if (fs.existsSync(__dirname + path)) {
 						console.log(`Found. Uploading...`);
-						const readStream = fs.createReadStream(__dirname + req.url);
+						const readStream = fs.createReadStream(__dirname + path);
 						res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
 						readStream.pipe(res);
 					}

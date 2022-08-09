@@ -8,7 +8,8 @@
 			let client = new WebSocket('ws://localhost:8082');
 
 			client.addEventListener('message', (msg) => {
-				const audio = new Audio(`resources/${msg.data}`);
+				console.log(msg);
+				const audio = new Audio(msg.data);
 				audio.play();
 			});
 		</script>

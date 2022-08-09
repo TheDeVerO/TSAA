@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-function getFiles(dir = '') {
-	const files = (fs.Dirent = fs.readdirSync(`${__dirname}/resources/${dir && dir + '/'}`, { withFileTypes: true }));
+function getFiles(dir) {
+	const files = (fs.Dirent = fs.readdirSync(`${__dirname}/${dir}`, { withFileTypes: true }));
 
 	const sounds = [];
 
@@ -12,7 +12,7 @@ function getFiles(dir = '') {
 
 	files.forEach((file) => {
 		if (file.isDirectory()) {
-			sounds.push({ command: file.name, files: getFiles(file.name) });
+			sounds.push({ command: file.name, files: getFiles(`${dir}/${file.name}`) });
 		} else {
 			sounds.push(file.name);
 		}

@@ -8,13 +8,25 @@ const explorer = require('child_process').exec;
 const getFiles = require('./get-files');
 const systrayConfig = require('./systray.json');
 
-const files = getFiles();
+const files = getFiles(`resources/`);
+const exclusives = getFiles('exclusives/');
 const systray = new SysTray(systrayConfig);
 
 const commands = {};
+const users = {};
 
 var consoleToggle = true;
+var buffer = [];
 var wsServer;
+
+exclusives.forEach((user) => {
+	userName = user.split('.').slice(0, -1).join('.');
+	users[userName] = {
+		callback: function callback() {
+			playSound(`exclusives/${user}`);
+		},
+	};
+});
 
 files.forEach((file) => {
 	if (typeof file === 'object' && file !== null) {
@@ -23,17 +35,17 @@ files.forEach((file) => {
 				const rand = Math.random() * file.files.length - 1;
 				if (rand < 0) {
 					console.warn(`It is recommended to have at least two files in the ${file.command} directory`);
-					playSound(`${file.command}/${file.files[0]}`);
+					playSound(`resources/${file.command}/${file.files[0]}`);
 				} else {
-					playSound(`${file.command}/${file.files[Math.round(rand)]}`);
+					playSound(`resources/${file.command}/${file.files[Math.round(rand)]}`);
 				}
 			},
 		};
 	} else {
-		commandName = file.split('.').slice(0, -1).join('.');
+		const commandName = file.split('.').slice(0, -1).join('.');
 		commands[commandName] = {
 			callback: function callback() {
-				playSound(`${file}`);
+				playSound(`resources/${file}`);
 			},
 		};
 	}
@@ -54,6 +66,7 @@ function createServer() {
 		if (err) console.log(err);
 		const httpServer = http
 			.createServer(function (req, res) {
+				console.log(req.url);
 				if (req.url === '/') {
 					console.log(`Homepage requested.`);
 					res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -62,6 +75,16 @@ function createServer() {
 				} else if (req.url.startsWith('/resources')) {
 					const path = decodeURIComponent(req.url);
 					console.log(`Resources requested.`);
+					console.log(`Looking for ${path}...`);
+					if (fs.existsSync(__dirname + path)) {
+						console.log(`Found. Uploading...`);
+						const readStream = fs.createReadStream(__dirname + path);
+						res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
+						readStream.pipe(res);
+					}
+				} else if (req.url.startsWith('/exclusives')) {
+					const path = decodeURIComponent(req.url);
+					console.log(`Exclusives called.`);
 					console.log(`Looking for ${path}...`);
 					if (fs.existsSync(__dirname + path)) {
 						console.log(`Found. Uploading...`);
@@ -102,8 +125,15 @@ function createServer() {
 }
 
 tmiClient.on('message', (channel, tags, message, self) => {
+	Object.keys(users).forEach((userName) => {
+		if (tags['display-name'] === userName) {
+			users[userName].callback();
+		}
+	});
+
 	if (self) return;
 	if (!message.startsWith('!')) return;
+	if (buffer.indexOf(tags.username) >= 0) return;
 
 	console.log('tmiClient received a command message.');
 
@@ -116,6 +146,7 @@ tmiClient.on('message', (channel, tags, message, self) => {
 		console.error(error.message);
 		console.log('No such command found.');
 	}
+	cooldown(tags.username);
 });
 
 function playSound(path) {
@@ -128,6 +159,15 @@ function playSound(path) {
 	}
 	console.log('Sending playSound signal... Connections: ' + wsServer.connections.length);
 	wsServer.connections?.forEach((connection) => connection.send(path));
+}
+
+function cooldown(username) {
+	buffer.push(username);
+	console.log(buffer);
+	setTimeout(() => {
+		buffer = buffer.filter((user) => user !== username);
+		console.log(buffer);
+	}, 5000);
 }
 
 // SysTray Handler

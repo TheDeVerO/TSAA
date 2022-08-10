@@ -20,12 +20,22 @@ var buffer = [];
 var wsServer;
 
 exclusives.forEach((user) => {
-	userName = user.split('.').slice(0, -1).join('.');
-	users[userName] = {
-		callback: function callback() {
-			playSound(`exclusives/${user}`);
-		},
-	};
+	if (typeof user === 'object' && user !== null) {
+		userName = user.split('.').slice(0, -1).join('.');
+		users[userName] = {
+			callback: function callback(word) {
+				playSound(`exclusives/${user}/${word}`);
+			},
+		};
+	} else {
+		console.log(`Ayo, wuut daaa heeeeck brubber? You need to put ${user} file in the folder named after user nickname`);
+	}
+	// userName = user.split('.').slice(0, -1).join('.');
+	// users[userName] = {
+	// 	callback: function callback() {
+	// 		playSound(`exclusives/${user}`);
+	// 	},
+	// };
 });
 
 files.forEach((file) => {
@@ -125,11 +135,11 @@ function createServer() {
 }
 
 tmiClient.on('message', (channel, tags, message, self) => {
-	Object.keys(users).forEach((userName) => {
-		if (tags['display-name'] === userName) {
-			users[userName].callback();
-		}
-	});
+	// Object.keys(users).forEach((userName) => {
+	// 	if (tags['display-name'] === userName) {
+	// 		users[userName].callback();
+	// 	}
+	// });
 
 	if (self) return;
 	if (!message.startsWith('!')) return;

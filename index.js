@@ -5,18 +5,31 @@ const WebSocketServer = require('websocket').server;
 const SysTray = require('systray').default;
 const explorer = require('child_process').exec;
 
+// Function that gets files from specified folder and returns an array of items.
 const getFiles = require('./get-files');
+// Config for SysTray manager.
 const systrayConfig = require('./systray.json');
 
+// Getting files from folders.
 const files = getFiles(`resources/`);
 const exclusives = getFiles('exclusives/');
+
+// Creating a SysTray using SysTray Config.
 const systray = new SysTray(systrayConfig);
 
+// Will contain commands list to wait for.
 const commands = {};
+
+// WIP. isn't used currently.
 const users = {};
 
+// Handles showing and hiding the console.
 var consoleToggle = true;
+
+// Users on cooldown buffer. Will contain an array of users.
 var buffer = [];
+
+// Web Socket server variable.
 var wsServer;
 
 exclusives.forEach((user) => {
@@ -30,12 +43,6 @@ exclusives.forEach((user) => {
 	} else {
 		console.log(`Ayo, wuut daaa heeeeck brubber? You need to put ${user} file in the folder named after user nickname`);
 	}
-	// userName = user.split('.').slice(0, -1).join('.');
-	// users[userName] = {
-	// 	callback: function callback() {
-	// 		playSound(`exclusives/${user}`);
-	// 	},
-	// };
 });
 
 // Filling the commands object with commands and files.
@@ -174,19 +181,9 @@ function createServer() {
 
 // Twitch Messaging Interface message handler.
 tmiClient.on('message', (channel, tags, message, self) => {
-	// Object.keys(users).forEach((userName) => {
-	// 	if (tags['display-name'] === userName) {
-	// 		users[userName].callback();
-	// 	}
-	// });
-
 	// (Userful only in case I'll add a bot to this service...)
 	// Ignoring messages sent by self (bot).
 	if (self) return;
-
-	Object.keys(users).forEach((user) => {
-		// Object.keys(users[user]).forEach;
-	});
 
 	// Checking if message is addressed to bot.
 	if (!message.startsWith('!')) return;
